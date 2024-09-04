@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="description" content="" />
+<meta name="keywords" content="" />
+<title>UKEY登录</title>
+<script type="text/javascript" src="./lib/jquery/jquery.js"></script>
+<link rel="stylesheet" type="text/css" href="./css/pc_login.css" />
+<link rel="stylesheet" type="text/css" href="./css/key_login.css" />
+<style type='text/css'>
+input {
+	margin: 0;
+	padding: 0;
+}
+.key_login input,.key_login select{
+	margin: 0 auto;
+    margin-bottom: 20px;
+}
+#notice_div .notice_color{color:red;}
+#DevicelistDivId #flashMessage{color:red;margin-top: -10px;font-size: 12px;}
+.buttonStyle {
+	display: inline-block;
+	height: 30px;
+	line-height: 30px;
+	padding: 0 18px;
+	background-color: #438EB9;
+	color: #fff;
+	white-space: nowrap;
+	text-align: center;
+	border: none;
+	border-radius: 2px;
+	cursor: pointer;
+	opacity: .9;
+	filter: alpha(opacity = 90);
+	margin-right: 5px;
+	margin-top: 10px;
+}
+
+.textStyle, select {
+	padding-left: 10px;
+	height: 28px;
+	line-height: 28px;
+	line-height: 28px\9;
+	border: 1px solid #e6e6e6;
+	background-color: #fff;
+	border-radius: 2px;
+	margin-right: 5px;
+	width: 250px;
+	margin-top: 10px;
+}
+
+.textStyle:focus, select:focus {
+	border-color: #569AC1 !important;
+}
+
+#ntls_client_write_key_div {
+	display: none
+}
+
+#ntls_client_write_key_value {
+	width: 670px
+}
+</style>
+</head>
+<body>
+	<div>
+		<table border=0>
+			<tr>
+				<td colspan=2>
+					<h1>websocket功能模块检测</h1>
+					<div>
+						<input class='buttonStyle' type='button' value='清空日志' onclick='clear_log()' />
+						<input class='buttonStyle' type='button' value='检测是否安装UKEY插件' id='ntls_websocket_server_check' />
+						<input class='buttonStyle' type='button' value='枚举SM2私钥标识' id='enumerate_sm2_ukey_user' />
+						<input class='buttonStyle' type='button' value='枚举SM9私钥标识' id='enumerate_sm9_ukey_user' />
+
+						<input class='buttonStyle' type='button' value='SM2签名验签' id='data_sm2_signature' />
+						<input type='hidden' value='none' id='sm2_hashtype' />
+						<input type='hidden' value='none' id='sm2_format' />
+						<input type='hidden' value='' id='sm2_sign_data' />
+
+						<input class='buttonStyle' type='button' value='SM9签名验签' id='data_sm9_signature' />
+						<input type='hidden' value='none' id='sm9_hashtype' />
+						<input type='hidden' value='' id='sm9_sign_data' />
+
+						<input class='buttonStyle' type='button' value='websocket在线测试'  onclick="window.location.href='webscoket_online.html';"/>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="50%">
+					<div style='padding-left: 5px;overflow-x: auto;overflow-y: scroll;margin-top: 20px;border:1px solid  black;width: 960px; height: 500px;'  id='ntls_server_check_result'>
+					</div>
+				</td>
+				<td style='position: relative;' width="50%">
+					<div class="content_wrapper" style='background: #ffffff;position: absolute;top: 0px;margin-top: 20px;left: 5px;'>
+						<div class="switch">
+							 <a href="#" onclick="showLoginMode(1)" id="a_pc" class="switch_mouse_on">帐号登录</a>
+							 <a href="#" onclick="showLoginMode(2)" id="a_sm9" class="">UKEY登录</a>
+						</div>
+
+						<div id="divEmailLoginMode" class="pc_login" style="">
+							<label>账号： </label> <input name="data[User][email]" id="email"
+								placeholder="请输入账号" class="inpUser" type="text"> <label>密码：
+							</label> <input autocomplete="off" name="data[User][password]" id="password"
+								placeholder="请输入密码" class="inpPW" type="password"> <label>验证码：
+							</label>
+							<div class="code_wrap">
+								<input name="data[User][code]" id="verifyCode" placeholder="请输入验证码"
+									class="inpPW inCode" type="text"> <img
+									src="/users/captcha" id="code" class="imgCode" align="absmiddle">
+								<a href="javascript:void(0);" onclick="change_img()"
+									style="line-height: 23px;">看不清？</a>
+							</div>
+							<button id="login_button" class="Button" type="submit"
+								name="action:login">登 录</button>
+						</div>
+						<!-- .pc_login -->
+
+						<div id="divKeyLoginMode" class="key_login" style="display: none;">
+							<div id="SecmailSafeLoginDiv">
+								<div id="DevicelistDivId" style="display: none;margin-bottom: 0px;">
+									<div>
+										<div>请选择UKEY：</div>
+										<select id="DeviceList" onchange='select_identity(this.value)'></select>
+									</div>
+									<div>
+										<div>私钥标识：</div>
+										<select name="username" id="SelectUSB"><option value="">请选择私钥标识</option></select>
+									</div>
+									<div>
+										<div>PIN码：</div>
+										<input id="KeyPassWord" name="KeyPassWord" type="password" value='123456'>
+									</div>
+									<input id="chapchallenge" name="chapchallenge" type="hidden" value="sMUrV51WVcCenFGLUdM5gYlmmpKKQ5yhKBjyDs0jA5Y=" />
+									<input id="cert_data" name="cert_data" type="hidden" />
+									<input id="sign_data" name="sign_data" type="hidden" />
+									<div id="flashMessage" style="display: block;">&nbsp;</div>
+									<button id="ukey_submit" class="Button" type="button" name="SubmitButton">登 录</button>
+									<button style='display:none;width:120px;' id="sm2_sign" class="Button" type="button" >SM2签名</button>
+									<button style='display:none;width:120px;' id="sm2_verifysign" class="Button" type="button" >SM2验签</button>
+									<button style='display:none;width:120px;' id="sm9_sign" class="Button" type="button" >SM9签名</button>
+									<button style='display:none;width:120px;' id="sm9_verifysign" class="Button" type="button" >SM9验签</button>
+								</div>
+								<div id='notice_div' style="text-align: center;margin-left: 10px;">
+									<div id="default_notice" class='notice_color'>检测中，请稍后...</div>
+									<div id="download_olym_ukey_plugin" style="display:none">
+										<p class='notice_color'>您的电脑未安装控件!<br />安装后请按'F5'刷新</p>
+										<a href="./files/olym_ukey_plugin.exe" title='下载'><img src="./img/downloadcontrolbutton.gif" border="0" alt="download" style='margin-top: 5px;'/></a>
+									</div>
+									<div id="InsertKeyImageDiv" style="display:none" >
+										<p class='text notice_color'>插入UKEY后按'F5'刷新页面</p>
+										<img src="./img/insertkey.gif" border="0" style='margin-top: 5px;width: 120px;'/>
+									</div>
+								</div>
+							</div>
+						</div>
+					<!-- .sm9_login -->
+
+					<div id="divKeyLoginMode" class="qr_login" style="display: none">
+						<div id="QrLoginDiv">
+							<img alt="login" src="/users/qrCode" class="qrCodeImage" border="0">
+							<p style="color: #6b6f72;" id="msg">请使用密九令扫描二维码登录</p>
+						</div>
+					</div>
+					<!-- .qr_login -->
+					<div class="server_time"></div>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+</body>
+</html>
+
+<script type="text/javascript" src="./js/login_websocket.js"></script>
+<script type="text/javascript" src="./lib/websocket/detect.js"></script>
+<script type="text/javascript" src="./lib/websocket/ntlsutil.js"></script>
+<script type="text/javascript" src="./lib/websocket/ntls-plugin.js"></script>
+<!-- ie version < 10 support websokcet -->
+<script type="text/javascript" src="./lib/web-socket-js/swfobject.js"></script>
+<script type="text/javascript" src="./lib/web-socket-js/web_socket.js"></script>
+<!-- ie version < 8 support json -->
+<script type="text/javascript" src="./lib/json/json2.js"></script>
+<script type='text/javascript'>
+
+var key_type='file'; //file/usbkey/skf
+var check_key_type=false; //检测 枚举的keytype是否与配置的key_type一致，false时不检测
+
+var alg_type='SM9'; // SM2/SM9
+var old_alg_type=alg_type;
+var flash_policy_xmlsocket_port=845; //flash策略请求端口
+
+// ie version < ie10  support websokcet
+ // 如果浏览器不支持websocket，会使用这个flash自动模拟websocket协议，此过程对开发者透明
+WEB_SOCKET_SWF_LOCATION = "./lib/web-socket-js/WebSocketMain.swf";
+// 开启flash的websocket debug
+WEB_SOCKET_DEBUG = true;
+var host = '';
+if(host==''){
+	host='127.0.0.1';
+}
+try {
+	WebSocket.loadFlashPolicyFile("xmlsocket://" + host + ":"+flash_policy_xmlsocket_port);
+} catch (e) {
+	console.error(e);
+}
+
+
+var ntlsUtil = new NTLSPlugin();
+function ukey_init(){
+	if(ntlsUtil.wsObj && ntlsUtil.wsObj.readyState == 1){
+		check_plugin_exist();
+		return;
+	}
+	NTLSPro.download_plugin_div_id='download_olym_ukey_plugin'; //下载插件div标签中的id对应的值，例： <div id="download_olym_ukey_plugin" style="display:none">
+	NTLSPro.device_list_div_id='DevicelistDivId'; //标识选择div标签中的id对应的值，例： <div id="DevicelistDivId" style="display:none">
+
+	//step1 检测是否为移动端,移动端浏览器不支持websoctet
+	if (ntlsUtil.isMobile()) {
+		$('#default_notice').text('暂不支持移动端浏览器');
+		return false;
+	}
+	//step2 检测浏览器类型，默认情况下IE10以下浏览器不支持 websocket
+	if(!ntlsUtil.browserSupport()){
+		$('#default_notice').html("安全控件不支持当前浏览器，请使用火狐，谷歌<br/>等主流浏览器，IE10以下浏览器请确保电脑<br/>已安装并启用adobe flash player");
+		return false;
+	}
+	//step3 检测插件是否安装
+	$('#default_notice').text('检测中，请稍后...');
+	// NTLSPro.websocket_init();
+	// check_sender_timer=wait_timer=setTimeout('check_plugin_exist()', 1000);
+	ntlsUtil.websocketInit(check_plugin_exist, null, check_plugin_exist);
+}
+
+function check_plugin_exist(){
+	if(ntlsUtil.pluginExist==false){
+		//连接不成功,插件未安装或者服务未启动
+		$('#default_notice').hide();
+		$('#'+NTLSPro.download_plugin_div_id).show();
+		return false;
+	}
+	//step4 检测是否插入ukey, 所有接收信息的回调函数名称都为当前发送消息的action名称
+	ntlsUtil.func.enumerate_ukey_user(enumerate_ukey_user);
+}
+
+//检测ukey是否插入
+var ukey_identity_list=[];
+function enumerate_ukey_user(message){
+	//var res='{"code":0,"action":"enumerate_ukey_user","data":{"usbkey":[{"keyindex":"0","manufacturer":"olym_sm9","alg":"sm9","keytype":"file","identity":[{"cn":"WUFY@MYIBC.NET","container":"WUFY@MYIBC.NET_0","type":"sm9"},{"cn":"AAA@MYIBC.NET","container":"AAA@MYIBC.NET_2","type":"sm9_threshold"},{"cn":"TEST@MYIBC.NET","container":"TEST@MYIBC.NET_2","type":"sm9_threshold"},{"cn":"test@myibc.net","container":"test@myibc.net_4","type":"sm2"},{"cn":"WUFY@MYIBC.NET","container":"WUFY@MYIBC.NET_2","type":"sm9_threshold"},{"cn":"wufy@myibc.net","container":"wufy@myibc.net_4","type":"sm2"}]}]}}';
+	//var message = JSON.parse(res);
+	$('#default_notice').hide();
+	if(message==null){
+		$('#InsertKeyImageDiv').show();
+		return false;
+	}
+	var ukey_exist=false;
+	var ukey_list_html='<option value="">请选择UKEY</option>';
+	for(var i=0;i< message.data.usbkey.length;i++){
+		var key_data=message.data.usbkey[i];
+		if(typeof key_data.keytype != 'undefined'){
+			if(check_key_type==true &&  key_data.keytype != key_type ){
+			}else{
+				//keytype=file 在私钥标识中查找，从每个identity.0.type 查找sm2/sm9/...
+				var n=0;
+				var child_arr=[];
+				var this_ukey_exist=false;
+				var length=key_data.identity.length;
+				for (var m=0;m<length; m++){
+					//只匹配需要的alg
+					if(key_data.identity[m].type.toUpperCase().indexOf(alg_type)!=-1){
+						this_ukey_exist=true;//局部
+						child_arr[n]=key_data.identity[m];
+						n++;
+					}
+				}
+				if(this_ukey_exist){
+					ukey_exist=true;//全局
+					ukey_list_html+='<option value="'+key_data.keyindex+'">'+key_data.manufacturer+'</option>';
+					ukey_identity_list[key_data.keyindex]=child_arr; //私钥标识
+				}
+			}
+		}else{
+			//key_type=usbkey  在产商中查找
+			if(key_data.manufacturer.toUpperCase().indexOf(alg_type)!==-1 || key_data.alg.toUpperCase().indexOf(alg_type)!==-1 ){
+				ukey_exist=true;
+				ukey_list_html+='<option value="'+key_data.keyindex+'">'+key_data.manufacturer+'</option>';
+				ukey_identity_list[key_data.keyindex]=key_data.identity; //私钥标识
+			}
+		}
+
+	}
+	if(ukey_exist==false){
+		write_log('未检测到'+alg_type+'私钥标识',false,true); //按扭功能 ，检测sm2/sm9等 UKEY是否插件
+		$('#InsertKeyImageDiv').show();
+		$('#InsertKeyImageDiv .text').text('请插入UKEY后刷新页面');
+		return false;
+	}else{
+		write_log('检测到'+alg_type+'私钥标识',true,true);
+		write_log(JSON.stringify(message));
+		write_log(' ');
+	}
+	$('#DevicelistDivId').show();
+	$('#SubmitOrCancelDiv').show();
+	$('#DeviceList').empty();
+	$('#DeviceList').append(ukey_list_html);
+}
+
+//选择 ukey后，选择私钥标识
+function select_identity(index){
+	var identity_list_str='<option value="">请选择私钥标识</option>';
+	for(var i in ukey_identity_list){
+		if(i==index){
+			for(var m=0;m<ukey_identity_list[i].length;m++){
+				identity_list_str+='<option value="'+ukey_identity_list[i][m]['container']+'">'+ukey_identity_list[i][m]['cn']+'</option>';
+			}
+		}
+	}
+	$('#SelectUSB').empty();
+	$('#SelectUSB').append(identity_list_str);
+}
+
+//获取证书内容
+function get_cert_content(message){
+	console.log('msg------------------',message);
+	if(!message || !message.data){
+		$('#flashMessage').text('获取证书内容失败');
+		return false;
+	}
+	$('#cert_data').val(message.data);
+}
+
+//签名
+function message_sign(message){
+	if(!message || !message.data){
+		$('#flashMessage').text('获取签名数据失败');
+		return false;
+	}
+	$('#sign_data').val(message.data);
+	go_login();
+}
+
+
+function go_login(){
+	var ukey_val=$('#DeviceList').val();
+	var identity_val=$('#SelectUSB').val();
+	var pass=$('#KeyPassWord').val();
+	var challenge=$('#chapchallenge').val();
+
+	var sign_data=$('#sign_data').val();
+	if(sign_data==''){
+		$('#flashMessage').text('获取签名数据失败');
+		return false;
+	}
+	$('#flashMessage').text('');
+	var cert_data=$('#cert_data').val();
+	//var identity_val=$('#SelectUSB option:selected').text()
+	var posturl='/users/login';
+	if(alg_type=='SM2'){
+		$.ajax({
+	        url: '/users/sm2_login',
+	        type: "POST",
+	        contentType: "application/json; charset=utf-8",
+	        data: JSON.stringify({ cert: cert_data ,sig:sign_data}),
+	        timeout: 3000,
+	        async: false,
+	        dataType: "json",
+	        success: function (res) {
+	            if (res.code==true){
+	            	//必须提交用户名、口令、否则cakephp 的 auth插件不能正确运行
+	                $.ajax({
+						type:"POST",
+						url:posturl,
+						data:'username='+res.user+'&login_type=sm2_key',
+						async: false,
+						dataType:'text',
+						success:function(msg){
+							window.location.href='/admin'
+						}
+					});
+	            }else{
+	            	$('#flashMessage').text(res.msg);
+	            }
+	        },
+	        error: function () {
+	            alert('请求失败!');
+	        }
+	    });
+
+	}else if(alg_type=='SM9'){
+		$.ajax({
+			type:"POST",
+			url: '/users/validation',
+			data:{ 'chapResponse': sign_data,'postusername':identity_val},
+			async: false,
+			dataType:'text',
+			success:function(msg){
+				//UKEY ajax验证签名数据成功后提交form表单
+				var resText = msg;
+				var emailValidate = /^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$|^([0][1]|[1])[2-9][0-9]{9}$/;
+				if(!emailValidate.test($.trim(resText))) {
+					$('#flashMessage').text(resText);
+				}else{
+					//必须提交用户名、口令、否则cakephp 的 auth插件不能正确运行
+					$.ajax({
+						type:"POST",
+						url:posturl,
+						data:'data[User][logintype]=2&data[User][email]='+identity_val,
+						async: false,
+						dataType:'text',
+						success:function(msg){
+							window.location.href='/admin'
+						}
+					});
+				}
+			}
+	});
+
+	}else{
+		alert('未知类型：'+alg_type);
+		return false;
+	}
+}
+$(function (){
+	$('#ukey_submit').click(function(){
+		var ukey_val=$('#DeviceList').val();
+		var identity_val=$('#SelectUSB').val();
+		var pass=$('#KeyPassWord').val();
+		var challenge=$('#chapchallenge').val();
+		if(ukey_val=='' ||  ukey_val===null){
+			$('#flashMessage').text('请选择UKEY');
+			return false;
+		}
+		if(identity_val=='' ||  identity_val===null){
+			$('#flashMessage').text('请选择私钥标识');
+			return false;
+		}
+		if(pass.length<5){
+			$('#flashMessage').text('PIN码长度不正确');
+			return false;
+		}
+		if(alg_type=='SM9'){
+			console.log(11111);
+			//获取证书内容
+			// NTLSPro.get_cert_content(ukey_val,identity_val,1);
+			ntlsUtil.func.get_cert_content(ukey_val,identity_val,1,get_cert_content);
+		}
+
+		if(challenge==''){
+			$('#flashMessage').text('获取挑战值失败，请刷新页面');
+			return false;
+		}
+		// NTLSPro.message_sign(ukey_val,identity_val,pass,challenge);
+		ntlsUtil.func.message_sign(ukey_val,identity_val,pass,challenge,message_sign);
+	})
+})
+
+//按钮功能开始
+//检测是否安装UKEY插件
+$('#ntls_websocket_server_check').click(function(){
+	if(ntlsUtil.wsObj && ntlsUtil.wsObj.readyState == 1){
+		return;
+	}
+	$(this).attr('disabled',true);
+
+	$('#divKeyLoginMode').hide();
+
+	//step1 检测是否为移动端,移动端浏览器不支持websoctet
+	if (ntlsUtil.isMobile()) {
+		write_log('暂不支持移动端浏览器', undefined, true);
+		return false;
+	}
+	//step2 检测浏览器类型，默认情况下IE10以下浏览器不支持 websocket
+	if(!ntlsUtil.browserSupport()){
+		write_log("安全控件不支持当前浏览器，请使用火狐，谷歌<br/>等主流浏览器，IE10以下浏览器请确保电脑<br/>已安装并启用adobe flash player", undefined, true);
+		return false;
+	}
+	//step3 检测插件是否安装
+	ntlsUtil.websocketInit(_check_plugin_install, null, _check_plugin_install, function () {
+		write_log('websocket已关闭',false, true);
+	});
+	// check_sender_timer=setTimeout('_check_plugin_install()', 1000);
+})
+function _check_plugin_install(){
+	$('#ntls_websocket_server_check').attr('disabled',false);
+	if(NTLSPro.pluginExist==false){
+		write_log('插件未安装或者服务未启动',false,true);
+		return false;
+	}else{
+		write_log('插件已安装',true, true);
+	}
+}
+
+
+//枚举SM2私钥标识
+$('#enumerate_sm2_ukey_user').click(function(){
+	alg_type='SM2'; //改变UKEY类型
+	$('#ntls_websocket_server_check').click(); //连接
+	//枚举UKEY
+	write_log('枚举sm2私钥标识！');
+	ntlsUtil.func.enumerate_ukey_user(function (res) {
+		var data = res.data;
+		var usbKey = data && data.usbkey;
+		if(usbKey){
+			// write_log('sm私钥标识枚举成功！', true);
+			var flag = false;
+			for(var i = 0, len = usbKey.length; i < len; i++){
+				var usbKeyItem = usbKey[i];
+				if(usbKeyItem.identity){
+					var flagInner = usbKeyItem.identity.some(function (identity) {
+						return identity.type.toUpperCase().indexOf(alg_type) != -1;
+					});
+					if(flagInner){
+						flag = true;
+						break;
+					}
+				}
+			}
+			if(flag){
+				write_log('检测到SM2私钥标识', true);
+				write_log(JSON.stringify(usbKey), undefined, true);
+			}else {
+				write_log('未检测到SM2私钥标识', false, true);
+			}
+		}else {
+			write_log('SM2私钥标识枚举失败！', false, true);
+		}
+		console.log('alg_type', alg_type);
+	});
+})
+
+//枚举SM9私钥标识
+$('#enumerate_sm9_ukey_user').click(function(){
+	alg_type='SM9'; //改变UKEY类型
+	$('#ntls_websocket_server_check').click(); //连接
+	//枚举UKEY
+	write_log('枚举sm9私钥标识');
+	ntlsUtil.func.enumerate_ukey_user(function (res) {
+		var data = res.data;
+		var usbKey = data && data.usbkey;
+		if(usbKey){
+			// write_log('sm私钥标识枚举成功！', true);
+			var flag = false;
+			for(var i = 0, len = usbKey.length; i < len; i++){
+				var usbKeyItem = usbKey[i];
+				if(usbKeyItem.identity){
+					var flagInner = usbKeyItem.identity.some(function (identity) {
+						return identity.type.toUpperCase().indexOf(alg_type) != -1;
+					});
+					if(flagInner){
+						flag = true;
+						break;
+					}
+				}
+			}
+			if(flag){
+				write_log('检测到SM9私钥标识', true);
+				write_log(JSON.stringify(usbKey), undefined, true);
+			}else {
+				write_log('未检测到SM9私钥标识', false, true);
+			}
+		}else {
+			write_log('SM9私钥标识枚举失败！', false, true);
+		}
+	});
+});
+
+//SM2签名开始
+$('#data_sm2_signature').click(function(){
+	$('#flashMessage').text('');
+	alg_type='SM2'; //改变UKEY类型
+	$('#ukey_submit').hide();
+	$('#a_pc').hide();
+	$('#sm9_sign').hide();
+	$('#sm9_verifysign').hide();
+	$('#sm2_sign').show();
+	$('#sm2_verifysign').show();
+	$('#a_sm9').click();
+	$('#a_sm9').text('SM2签名验签');
+})
+$('#sm2_sign').click(function(){
+	var ukey_val=$('#DeviceList').val();
+	var identity_val=$('#SelectUSB').val();
+	var pass=$('#KeyPassWord').val();
+	var challenge=$('#chapchallenge').val();
+	if(ukey_val=='' ||  ukey_val===null){
+		$('#flashMessage').text('请选择UKEY');
+		return false;
+	}
+	if(identity_val=='' ||  identity_val===null){
+		$('#flashMessage').text('请选择私钥标识');
+		return false;
+	}
+	if(pass.length<5){
+		$('#flashMessage').text('PIN码长度不正确');
+		return false;
+	}
+	if(challenge==''){
+		$('#flashMessage').text('获取挑战值失败，请刷新页面');
+		return false;
+	}
+
+	var hashtype=$('#sm2_hashtype').val();
+	var format=$('#sm2_format').val();
+	//NTLSPro.data_sm2_signature(ukey_val, identity_val,pass,challenge);
+	ntlsUtil.func.data_sm2_signature(ukey_val, identity_val,pass,challenge,hashtype,format,sm2_sign);
+})
+function sm2_sign(message){
+	console.log('msg', message);
+	if(!message || !message.data){
+		$('#flashMessage').text('获取签名数据失败',false);
+		write_log('SM2数据签名失败', false, true);
+		return false;
+	}else{
+		$('#flashMessage').text('获取签名数据成功',true);
+		write_log('SM2数据签名成功，结果：'+message.data,true, true)
+	}
+	$('#sm2_sign_data').val(message.data);
+}
+
+//SM2验签开始
+$('#sm2_verifysign').click(function(){
+	//获取签名结果
+	var signdata=$('#sm2_sign_data').val();
+	var ukey_val=$('#DeviceList').val();
+	var identity_val=$('#SelectUSB').val();
+	var challenge=$('#chapchallenge').val();
+
+	if(signdata==''){
+		$('#flashMessage').text('请先签名');
+		return false;
+	}
+	if(ukey_val=='' ||  ukey_val===null){
+		$('#flashMessage').text('请选择UKEY');
+		return false;
+	}
+	if(identity_val=='' ||  identity_val===null){
+		$('#flashMessage').text('请选择私钥标识');
+		return false;
+	}
+	/*NTLSPro.get_cert_content(ukey_val,identity_val,1);
+	setTimeout("go_sm2_verifysign()",3000);*/
+	ntlsUtil.func.get_cert_content(ukey_val,identity_val,1,function (message) {
+		get_cert_content(message);
+		go_sm2_verifysign();
+	});
+	// setTimeout("go_sm2_verifysign()",3000);
+})
+function go_sm2_verifysign(){
+	var signdata=$('#sm2_sign_data').val();
+	var challenge=$('#chapchallenge').val();
+	var hashtype=$('#sm2_hashtype').val();
+	var cert_data=$('#cert_data').val();
+	if(cert_data==''){
+		$('#flashMessage').text('证书获取失败');
+		return false;
+	}
+	// NTLSPro.data_sm2_verifysign(challenge,signdata,cert_data,hashtype);
+	ntlsUtil.func.data_sm2_verifysign(challenge,signdata,cert_data,hashtype,sm2_verifysign);
+}
+function sm2_verifysign(message){
+	if(message.code==0){
+		$('#flashMessage').text('SM2验签成功');
+		write_log('SM2验签成功',true,true);
+	}else{
+		$('#flashMessage').text('SM2验签失败,错误信息：'+message.message);
+		write_log('SM2验签失败,错误信息：'+message.message,false,true);
+	}
+}
+
+//SM9签名开始
+$('#data_sm9_signature').click(function(){
+	$('#flashMessage').text('');
+	alg_type='SM9'; //改变UKEY类型
+	$('#ukey_submit').hide();
+	$('#a_pc').hide();
+	$('#sm2_sign').hide();
+	$('#sm2_verifysign').hide();
+	$('#sm9_sign').show();
+	$('#sm9_verifysign').show();
+	$('#a_sm9').click();
+	$('#a_sm9').text('SM9签名验签');
+})
+$('#sm9_sign').click(function(){
+	var ukey_val=$('#DeviceList').val();
+	var identity_val=$('#SelectUSB').val();
+	var pass=$('#KeyPassWord').val();
+	var challenge=$('#chapchallenge').val();
+	if(ukey_val=='' ||  ukey_val===null){
+		$('#flashMessage').text('请选择UKEY');
+		return false;
+	}
+	if(identity_val=='' ||  identity_val===null){
+		$('#flashMessage').text('请选择私钥标识');
+		return false;
+	}
+	if(pass.length<5){
+		$('#flashMessage').text('PIN码长度不正确');
+		return false;
+	}
+	if(challenge==''){
+		$('#flashMessage').text('获取挑战值失败，请刷新页面');
+		return false;
+	}
+	var hashtype=$('#sm9_hashtype').val();
+	// NTLSPro.data_sm9_signature(ukey_val,identity_val,pass,challenge,hashtype);
+	ntlsUtil.func.data_sm9_signature(ukey_val,identity_val,pass,challenge,hashtype,sm9_sign);
+})
+function sm9_sign(message){
+	if(!message || !message.data){
+		$('#flashMessage').text('数据签名失败');
+		write_log('数据签名失败',false,true);
+		return false;
+	}else{
+		$('#flashMessage').text('数据签名成功');
+		write_log('数据签名成功，结果：'+message.data,true,true)
+	}
+	$('#sm9_sign_data').val(message.data);
+}
+
+//SM9验签开始
+$('#sm9_verifysign').click(function(){
+	//获取签名结果
+	var signdata=$('#sm9_sign_data').val();
+	var ukey_val=$('#DeviceList').val();
+	var identity_val=$('#SelectUSB').val();
+	var challenge=$('#chapchallenge').val();
+
+	if(signdata==''){
+		$('#flashMessage').text('请先签名');
+		return false;
+	}
+	if(ukey_val=='' ||  ukey_val===null){
+		$('#flashMessage').text('请选择UKEY');
+		return false;
+	}
+	if(identity_val=='' ||  identity_val===null){
+		$('#flashMessage').text('请选择私钥标识');
+		return false;
+	}
+	var cn=$('#SelectUSB option:selected').text();
+	if(cn==''){
+		$('#flashMessage').text('cn参数不能为空');
+		return false;
+	}
+	/*NTLSPro.get_cert_content(ukey_val,identity_val,1);
+	setTimeout("go_sm9_verifysign()",3000);*/
+	ntlsUtil.func.get_cert_content(ukey_val,identity_val,1,function (message) {
+		get_cert_content(message);
+		go_sm9_verifysign();
+	});
+})
+function go_sm9_verifysign(){
+	var cn=$('#SelectUSB option:selected').text();
+	var signdata=$('#sm9_sign_data').val();
+	var challenge=$('#chapchallenge').val();
+	var cert_data=$('#cert_data').val();
+	var hashtype=$('#sm9_hashtype').val();
+	if(cert_data==''){
+		$('#flashMessage').text('证书获取失败');
+		return false;
+	}
+	// NTLSPro.data_sm9_verifysign(cn,challenge,signdata,cert_data,hashtype);
+	ntlsUtil.func.data_sm9_verifysign(cn,challenge,signdata,cert_data,hashtype,sm9_verifysign);
+}
+function sm9_verifysign(message){
+	if(message && message.code==0){
+		$('#flashMessage').text('SM9验签成功');
+		write_log('SM9验签成功',true,true);
+	}else{
+		$('#flashMessage').text('SM9验签失败,错误信息：'+message.message);
+		write_log('SM9验签失败,错误信息：'+message.message,false,true);
+	}
+}
+</script>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="description" content="" />
+<meta name="keywords" content="" />
+<title>websocket在线测试</title>
+<script type="text/javascript" src="./lib/jquery/jquery.js"></script>
+<link rel="stylesheet" type="text/css" href="./css/pc_login.css" />
+<link rel="stylesheet" type="text/css" href="./css/key_login.css" />
+<style type='text/css'>
+input {
+	margin: 0;
+	padding: 0;
+}
+.key_login input,.key_login select{
+	margin: 0 auto;
+    margin-bottom: 20px;
+}
+#notice_div .notice_color{color:red;}
+#DevicelistDivId #flashMessage{color:red;margin-top: -10px;font-size: 12px;}
+.buttonStyle {
+	display: inline-block;
+	height: 30px;
+	line-height: 30px;
+	padding: 0 18px;
+	background-color: #438EB9;
+	color: #fff;
+	white-space: nowrap;
+	text-align: center;
+	border: none;
+	border-radius: 2px;
+	cursor: pointer;
+	opacity: .9;
+	filter: alpha(opacity = 90);
+	margin-right: 5px;
+	margin-top: 10px;
+}
+
+.textStyle, select {
+	padding-left: 10px;
+	height: 28px;
+	line-height: 28px;
+	line-height: 28px\9;
+	border: 1px solid #e6e6e6;
+	background-color: #fff;
+	border-radius: 2px;
+	margin-right: 5px;
+	width: 250px;
+	margin-top: 10px;
+}
+
+.textStyle:focus, select:focus {
+	border-color: #569AC1 !important;
+}
+
+#ntls_client_write_key_div {
+	display: none
+}
+
+#ntls_client_write_key_value {
+	width: 670px
+}
+.content_wrapper{
+	width: 460px;text-align: center;height:500px;
+}
+.websocket_connect_disabled{
+cursor: not-allowed;
+background: #eeeeee;
+}
+</style>
+</head>
+<body>
+	<div>
+		<table border=0>
+			<tr>
+				<td colspan=2>
+					<h1>websocket在线测试</h1>
+					<div>
+						<input class='buttonStyle' type='button' value='清空日志' onclick='clear_log()' />
+						<input class='buttonStyle' type='button' value='返回' onclick="window.location.href='demo.html';"/> 
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="40%">
+					<div style='padding-left: 5px;overflow-x: auto;overflow-y: scroll;margin-top: 20px;border:1px solid  black;width: 760px; height: 500px;'  id='ntls_server_check_result'>
+					</div>
+				</td>
+				<td style='position: relative;' width="55%">
+					<div class="content_wrapper" style='background: #ffffff;position: absolute;top: 0px;margin-top: 20px;left: 5px;'>
+						<input type='text' value='wss://127.0.0.1:10022'  id="websocket_url" class="inpUser"/> 
+						<input type='button' value='连接' id='websocket_connect'  class='buttonStyle'/>
+						<input type='button' value='断开' id='websocket_closed'  class='buttonStyle' />
+						<textarea id="send_data" style="height:390px;width:95%;border: 1px solid #ccc;" placeholder="发送的json数据"></textarea>
+						<button id="send_message" class="buttonStyle" type="button" style='width: 95%;'>发送</button>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+</body>
+</html>
+
+<script type="text/javascript" src="./js/login_websocket.js"></script>
+<script type="text/javascript" src="./lib/websocket/detect.js"></script>
+<script type="text/javascript" src="./lib/websocket/websocket_online.js"></script>
+<!-- ie version < 10 support websokcet -->
+<script type="text/javascript" src="./lib/web-socket-js/swfobject.js"></script>
+<script type="text/javascript" src="./lib/web-socket-js/web_socket.js"></script>
+<!-- ie version < 8 support json -->
+<script type="text/javascript" src="./lib/json/json2.js"></script>
+<script type='text/javascript'>
+
+var key_type='file'; //file/usbkey/skf
+var check_key_type=false; //检测 枚举的keytype是否与配置的key_type一致，false时不检测
+
+var alg_type='SM2'; // SM2/SM9 
+var old_alg_type=alg_type;
+var flash_policy_xmlsocket_port=845; //flash策略请求端口
+
+// ie version < ie10  support websokcet
+ // 如果浏览器不支持websocket，会使用这个flash自动模拟websocket协议，此过程对开发者透明
+WEB_SOCKET_SWF_LOCATION = "./lib/web-socket-js/WebSocketMain.swf";
+// 开启flash的websocket debug
+WEB_SOCKET_DEBUG = true;
+var host = '';
+if(host==''){
+	host='127.0.0.1';
+}
+try {
+	WebSocket.loadFlashPolicyFile("xmlsocket://" + host + ":"+flash_policy_xmlsocket_port);
+} catch (e) {
+}
+
+var wait_timer
+
+$('#websocket_connect').click(function(){
+	var websocket_url=$('#websocket_url').val();
+	var tmp=websocket_url.split(":");
+	if(tmp[0]!='ws' && tmp[0]!='wss'){
+		write_log('websocket的地址错误,请重新输入',false);
+		return false;
+	}
+	NTLSPro.websocket_url=websocket_url;
+	NTLSPro.depend_detecte();
+	if (NTLSPro.is_mobile) {
+		write_log('暂不支持移动端浏览器',false);
+		return false;
+	}
+	//step2 检测浏览器类型，默认情况下IE10以下浏览器不支持 websocket
+	if(!NTLSPro.support_websocket){
+		write_log("安全控件不支持当前浏览器，请使用火狐，谷歌<br/>等主流浏览器，IE10以下浏览器请确保电脑<br/>已安装并启用adobe flash player");
+		return false;
+	}
+	$('#websocket_connect').attr('disabled',true);
+	//step3 连接
+	NTLSPro.websocket_init();
+	check_sender_timer=wait_timer=setTimeout('check_plugin_exist()', 1000);
+})
+
+function check_plugin_exist(){
+	if(NTLSPro.plugin_exist==false){
+		write_log('连接失败',false);
+		return false;
+	}
+	write_log('连接成功',true);
+}
+
+$('#websocket_closed').click(function(){
+	close_webwocket()
+})
+
+$('#send_message').click(function(){
+	var message=$('#send_data').val();
+	if(message==null || message==''){
+		write_log('请输入要发送json的数据',false);
+		return false;
+	}else{
+		var message = JSON.parse(message);
+        if (typeof message != "object") {
+        	write_log("请输入json数据");
+            return false;
+        }
+	}
+	NTLSPro.send_message(message);
+})
+</script>

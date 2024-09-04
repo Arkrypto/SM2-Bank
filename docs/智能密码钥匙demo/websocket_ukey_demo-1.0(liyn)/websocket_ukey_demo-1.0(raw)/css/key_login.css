@@ -1,0 +1,74 @@
+.key_login {
+	padding-top:20px;
+	text-align: center;
+}
+.key_select {
+	margin:20px auto;
+}
+
+.key_login input {
+	margin:0px;
+}
+.key_input {
+	height:40px;
+}
+#DevicelistDivId ,#SelectUSBDivId {
+	margin:0 auto;
+	margin-bottom:20px;
+}
+#KeyPassWordDiv{
+	margin:0 auto;
+	margin-bottom:10px\0;
+}
+#a11{margin-top:10px;}
+#DevicelistDivId div ,#SelectUSBDivId div, #KeyPassWordDiv div,#a11 div  {
+	text-align:left;
+	width:300px;
+	margin:0px auto;
+	font-size:16px;
+	color:#8f9498;
+}
+#DeviceList ,#SelectUSB {
+	color:#c3c6c8;
+	width:300px;
+	/*height:40px;
+	line-height: 40px;*/
+	font-size: 16px;
+}
+#KeyPassWord,#a12 {
+	border-radius: 2px;
+	color: #8f9498;
+	font-family: verdana;
+	font-size: 16px;
+	height: 18px;
+	padding: 8px;
+	line-height:18px;
+	width:280px;
+	border:1px solid #ccc;
+}
+#SubmitButton , #CancelButton {
+	color: #ffffff;
+	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+	background-color: #438eb9;
+	*background-color: #206fb9;
+	background-image: -moz-linear-gradient(top, #438eb9, #206fb9);
+	background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#438eb9), to(#206fb9));
+	background-image: -webkit-linear-gradient(top, #438eb9, #206fb9);
+	background-image: -o-linear-gradient(top, #438eb9, #206fb9);
+	background-image: linear-gradient(to bottom, #438eb9, #206fb9);
+	background-repeat: repeat-x;
+	border-color: #206fb9 #206fb9 #438eb9;
+	border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff206fb9', endColorstr='#ff438eb9', GradientType=0);
+	filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+	padding:5px 13px;
+	font-size:14px;
+	border-radius:6px;
+	width:100px;
+	margin:0px 20px;
+	cursor:pointer;
+
+}
+#SubmitOrCancelDiv {
+	margin-bottom:10px;
+}
