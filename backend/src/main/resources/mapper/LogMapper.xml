@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xidian.bankdemo.mapper.LogMapper">
+
+    <sql id="logInfo">id, uid, username, type, obj, result, description, gmt_create,gmt_Modified</sql>
+
+    <select id="findLog" resultType="Log">
+        select <include refid="logInfo"/> from log
+    </select>
+
+    <select id="findLogByDate" resultType="Log">
+        select <include refid="logInfo"/> from log
+        <where>
+            <if test="start !=null">
+                and gmt_create >=#{start}
+            </if>
+            <if test="end != null">
+                and gmt_create &lt;= #{end}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertLog" parameterType="Log">
+        insert into log(username, type, obj, result, description,gmt_Create,gmt_Modified)
+        values (#{username}, #{type}, #{obj}, #{result}, #{description},#{gmtCreate},#{gmtModified})
+    </insert>
+    <delete id="deleteById">
+        delete from log where id = #{id}
+    </delete>
+    <delete id="deleteAll">
+        delete from log
+    </delete>
+</mapper>

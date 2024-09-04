@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xidian.bankdemo.mapper.UserMapper">
+
+    <sql id="userInfo">id,username,role,avatar,email,gender,age,status,certificate,idCard,payPassword</sql>
+
+    <select id="findById" resultType="User">
+        select * from user where id = #{id}
+    </select>
+    <select id="findByName" resultType="User">
+        select <include refid="userInfo"/> from user where username = #{name}
+    </select>
+    <select id="findAll" resultType="User">
+        select <include refid="userInfo"/> from user
+    </select>
+    <select id="findPwdByName" resultType="string">
+        select password from user where username = #{username}
+    </select>
+    <select id="existsByName" resultType="boolean">
+        select exists(select 1 from user where username = #{username})
+    </select>
+    <insert id="insertUser" parameterType="User">
+        insert into user(username, password, email, gender, age, role, status,certificate,idCard,payPassword ,avatar,gmt_create,gmt_modified)
+        values (#{username}, #{password}, #{email}, #{gender}, #{age}, #{role}, #{status},#{certificate},#{idCard},#{payPassword},#{avatar},#{gmtCreate},#{gmtModified})
+    </insert>
+    <update id="updateUser" parameterType="User">
+        update user set password=#{password}, email=#{email}, gender=#{gender}, age=#{age}, role=#{role}, status=#{status},idCard=#{idCard},certificate=#{certificate},payPassword=#{payPassword},avatar=#{avatar},gmt_modified=#{gmtModified}
+        where username = #{username}
+    </update>
+    <delete id="deleteUser">
+        delete from user where id = #{id}
+    </delete>
+    <select id="getInfoByName" resultType="User">
+        select <include refid="userInfo"/> from user
+        where username = #{name}
+    </select>
+    <update id="setInfoByName" parameterType="User">
+        update user set gender=#{gender}, age=#{age}, email=#{email}
+        where username = #{username}
+    </update>
+    <update id="setPwdByName">
+        update user set password=#{password} where username = #{username}
+    </update>
+    <update id="setPpwdByNameAndIdCard">
+        update user set payPassword=#{payPassword} where username = #{username} and idCard =#{idCard}
+    </update>
+    <update id="updateCode">
+        update user set code = #{code} where id = #{id}
+    </update>
+    <select id="existsByNameAndCode" resultType="boolean">
+        select exists(select 1 from user where username = #{username} and code = #{code})
+    </select>
+</mapper>

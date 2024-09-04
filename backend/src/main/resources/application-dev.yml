@@ -1,0 +1,42 @@
+server:
+  port: 8090
+  servlet:
+    context-path: "/bank"
+
+spring:
+  datasource:
+    username: "root"
+    password: ""
+    url: "jdbc:mysql://localhost:3306/bank_demo?useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+
+  jackson:
+    time-zone: GMT+8
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+#    default-fetch-size: 100
+#    default-statement-timeout: 30
+
+logging:
+#  config: config/logback-spring.xml
+  level:
+    com:
+      xidian:
+        bankdemo:
+          mapper: debug
+
+
+signverify:
+  url:        #ip+端口 默认28086
+  index:                                 #对应索引
+  password:                       #私钥权限标识码
+
+
+encryptor:
+  ip: 
+  port: 
+  sm2Index: 
+  password: 

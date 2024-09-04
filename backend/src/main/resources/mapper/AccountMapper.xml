@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xidian.bankdemo.mapper.AccountMapper">
+
+    <sql id="accountInfo">id,bank_name,phone,balance,status</sql>
+
+    <select id="findByOwnerId" resultType="Account">
+        select <include refid="accountInfo"/> from account
+        where owner_id = #{ownerId}
+    </select>
+    <select id="findAll" resultType="Account">
+        select id, bank_name from account
+    </select>
+    <select id="existsById" resultType="boolean">
+        select exists(select 1 from account where id = #{id})
+    </select>
+    <insert id="insertAccount" parameterType="Account">
+        insert into account(id, bank_name, phone, balance, status, owner_id,gmt_create,gmt_modified)
+        values (#{id}, #{bankName}, #{phone}, #{balance}, #{status}, #{ownerId},#{gmtCreate},#{gmtModified})
+    </insert>
+    <update id="updateAccount" parameterType="Account">
+        update account set bank_name=#{bankName}, phone=#{phone}, balance=#{balance}, status=#{status},gmt_modified=#{gmtModified}
+        where id = #{id}
+    </update>
+    <delete id="deleteAccount">
+        delete from account where id = #{id}
+    </delete>
+    <update id="updateBalanceById">
+        update account set balance = balance + #{balance}
+        where id = #{id}
+    </update>
+</mapper>

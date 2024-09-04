@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xidian.bankdemo.mapper.FriendMapper">
+
+    <sql id="friendInfo">account,friend_name,bank_name</sql>
+    <select id="findByOwnerId" resultType="Friend">
+        select <include refid="friendInfo"/> from friend
+        where owner_id = #{ownerId}
+    </select>
+    <insert id="insertFriend" parameterType="Friend">
+        insert into friend(account, friend_name, bank_name, owner_id)
+        values (#{account}, #{friendName}, #{bankName}, #{ownerId})
+    </insert>
+    <select id="existsByAccount" resultType="boolean">
+        select exists(select 1 from friend where account = #{account} and owner_id = #{ownerId})
+    </select>
+</mapper>

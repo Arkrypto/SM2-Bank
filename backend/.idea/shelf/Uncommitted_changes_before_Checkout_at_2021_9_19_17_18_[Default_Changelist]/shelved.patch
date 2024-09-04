@@ -1,0 +1,248 @@
+Index: src/main/java/com/xidian/bankdemo/serurity/TimeStamp.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/xidian/bankdemo/serurity/TimeStamp.java b/src/main/java/com/xidian/bankdemo/security/TimeStamp.java
+rename from src/main/java/com/xidian/bankdemo/serurity/TimeStamp.java
+rename to src/main/java/com/xidian/bankdemo/security/TimeStamp.java
+--- a/src/main/java/com/xidian/bankdemo/serurity/TimeStamp.java	
++++ b/src/main/java/com/xidian/bankdemo/security/TimeStamp.java	
+@@ -1,4 +1,4 @@
+-package com.xidian.bankdemo.serurity;
++package com.xidian.bankdemo.security;
+ 
+ import java.io.BufferedOutputStream;
+ import java.io.ByteArrayOutputStream;
+@@ -9,18 +9,20 @@
+ import java.io.IOException;
+ import java.io.UnsupportedEncodingException;
+ import java.nio.charset.StandardCharsets;
++import java.security.cert.CertificateEncodingException;
+ import java.text.ParseException;
+ import java.text.SimpleDateFormat;
+-import java.util.ArrayList;
++import java.util.*;
+ //import java.util.ArrayList;
+-import java.util.Date;
+-import java.util.Scanner;
+ 
+ import com.cslc.netsignagent.*;
+ import com.xidian.bankdemo.common.TimeStampInfo;
++import io.jsonwebtoken.io.Decoders;
++import io.jsonwebtoken.io.Encoders;
+ 
+ public class TimeStamp {
+     private static NetSignAgent agent = new NetSignAgent();
++    private static NetSignResult result = new NetSignResult();
+ 
+     private static int hashFlag = 0;
+     private static int signFlag = 0;
+@@ -29,7 +31,7 @@
+     private static String sub = "";
+ 
+     static {
+-        Scanner scan = new Scanner(System.in);
++//        Scanner scan = new Scanner(System.in);
+ 
+         try {
+             agent.initialize("192.168.10.100", 6008, 30, 10, "", "");
+@@ -37,8 +39,7 @@
+             System.out.println("In initialize, " + e.getMessage());
+         }
+ 
+-
+-        System.out.println("1.RSA	2.SM2: ");
++//       System.out.println("1.RSA	2.SM2: ");
+ //		int choice = scan.nextInt();
+         int choice = 2;
+         if (choice == 1) {
+@@ -51,16 +52,10 @@
+             hashFlag = DtTimeStamp.SGD_SHA1;
+             signFlag = DtTimeStamp.SGD_SHA1_RSA;
+         } else if (choice == 2) {
+-            //certName = "d://sccauser.cer";
+-            //subject = "CN=zhoujiang,OU=NO.1:510183,OU=NO.2:scca,OU=NO.3:0,OU=ID3:Personal,OU=PN:����SM2,OU=SCEGBSM2TEST,O=Sichuan Digital Certificate Authority Management Center,C=CN";
+ 
+             certName = "user.cer";
+-//			subject = "CN=041@Zadbctest1@adbctest1@00000002,OU=Enterprises,OU=Local Ra,O=CFCA TEST OCA1,C=cn";
+             subject = "CN=unionpayte@DA@Z00000000@1,OU=Organizational-1,OU=unionpaytest,O=CFCA TEST OCA31 SM2,C=CN";
+ 
+-            //	certName = "d://user.cer";
+-            //	subject = "CN=zhoujiang,OU=NO.1:510183,OU=NO.2:scca,OU=NO.3:0,OU=ID3:Personal,OU=PN:����SM2,OU=SCEGBSM2TEST,O=Sichuan Digital Certificate Authority Management Center,C=CN";
+-
+             hashFlag = DtTimeStamp.SGD_SM3;
+             signFlag = DtTimeStamp.SGD_SM3_SM2;
+         }
+@@ -72,15 +67,95 @@
+             System.out.println("In getBytes, " + e.getMessage());
+         }
+ 
+-        scan.close();
++//        scan.close();
+     }
++
++
++    public static String getTsResponse(String puncData) {
++        byte[] tsrequest = null;
++        byte[] pucInData = puncData.getBytes();
++        try {
++            tsrequest = agent.STF_CreateTSRequest(sub.getBytes(StandardCharsets.ISO_8859_1), pucInData, 1, "".getBytes(), hashFlag);
++        } catch (NetSignException e) {
++            System.out.println("STF_CreateTSRequest: " + e.getErrorCode());
++        }
++
++        byte[] tsresponse = null;
++        try {
++            tsresponse = agent.STF_CreateTSResponse(sub.getBytes("ISO-8859-1"), tsrequest, signFlag);
++        } catch (NetSignException e) {
++            System.out.println("STF_CreateTSResponse: " + e.getErrorCode());
++        } catch (UnsupportedEncodingException e) {
++            System.out.println("UnsupportedEncodingException: " + e.getMessage());
++        }
+ 
++        return Encoders.BASE64URL.encode(tsresponse);
++    }
++
++
++    public static boolean verifyTSValidity(String tsResponse) {
++        byte[] decode = Decoders.BASE64URL.decode(tsResponse);
++        boolean b = false;
++        try {
++            b = agent.STF_VerifyTSValidity(decode, hashFlag, signFlag, getBytes(certName));
++        } catch (NetSignException e) {
++            System.out.println("STF_VerifyTSValidity: " + e.getErrorCode());
++        }
++        return b;
++    }
++
++    public static void getInfo(String tsResponse) {
++        byte[] decode = Decoders.BASE64URL.decode(tsResponse);
++        ArrayList<byte[]> info = null;
++        try {
++            info = agent.STF_GetTSInfo(decode);
++        } catch (NetSignException e) {
++            System.out.println("STF_GetTSInfo: " + e.getErrorCode());
++        }
++        String about = new String(info.get(0));
++        String time = new String(info.get(1));
++        System.out.println("about: " + about);
++        System.out.println("time: " + time);
++
++    }
++
++    public static Date getDate(String tsResponse) {
++        byte[] decode = Decoders.BASE64URL.decode(tsResponse);
++        byte[] bytes = new byte[0];
++        try {
++            bytes = agent.STF_GetTSDetail(decode, DtTimeStamp.STF_TIME_OF_STAMP);
++        } catch (NetSignException e) {
++            System.out.println("STF_GetTSDetail: " + e.getMessage());
++        }
++        String sTime = new String(bytes);
++        SimpleDateFormat sDate = new SimpleDateFormat("yyyyMMddHHmmss");
++        Date parse = null;
++        try {
++            parse = sDate.parse(sTime);
++        } catch (ParseException e) {
++            System.out.println(e.getMessage());
++        }
++        long time = parse.getTime() + 28800000;
++        Date date = new Date(time);
++        return date;
++
++    }
++
++    public static void main(String[] args) {
++        String message = "hello world";
++        TimeStampInfo timeStampInfo = getTimeStampInfo(message);
++        System.out.println(timeStampInfo);
++    }
+ 
+     public static TimeStampInfo getTimeStampInfo(){
++        return getTimeStampInfo("123");
++    }
++
++    public static TimeStampInfo getTimeStampInfo(String pucIndata) {
+         TimeStampInfo timeStampInfo = new TimeStampInfo();
+         byte[] tsrequest = null;
+         try {
+-            byte[] pucInData = "123".getBytes();
++            byte[] pucInData = pucIndata.getBytes();
+             tsrequest = agent.STF_CreateTSRequest(sub.getBytes(StandardCharsets.ISO_8859_1), pucInData, 1, "".getBytes(), hashFlag);
+ //            printf("CreateTSRequest tsrequest", tsrequest);
+         } catch (NetSignException e) {
+@@ -89,6 +164,10 @@
+         byte[] tsresponse = null;
+         try {
+             tsresponse = agent.STF_CreateTSResponse(sub.getBytes("ISO-8859-1"), tsrequest, signFlag);
++            timeStampInfo.setTimeStamp(
++                    Encoders.BASE64URL.encode(tsresponse)
++            );
++
+ //            printf("STF_CreateTSResponse.tsresponse", tsresponse);
+         } catch (NetSignException e) {
+             System.out.println("In STF_CreateTSResponse, " + e.getErrorCode());
+@@ -103,30 +182,20 @@
+             System.out.println("In STF_VerifyTSValidity, " + e.getErrorCode());
+         }
+ 
+-        ArrayList<byte[]> info = null;
++        ArrayList<byte[]> info;
+         try {
+             info = agent.STF_GetTSInfo(tsresponse);
+             timeStampInfo.setAbout(new String(info.get(0)));
+             String date_str = new String(info.get(1));
+             SimpleDateFormat sDate = new SimpleDateFormat("yyyyMMddHHmmss");
+             Date parse = sDate.parse(date_str);
+-            long time = parse.getTime()+28923433;
++            long time = parse.getTime() + 28800000;
+             Date date = new Date(time);
+             timeStampInfo.setTime(date);
+         } catch (NetSignException | ParseException e) {
+-            System.out.println("In STF_GetTSInfo:  "+ e.getMessage() );
++            System.out.println("In STF_GetTSInfo:  " + e.getMessage());
+         }
+-
+         return timeStampInfo;
+-
+-    }
+-
+-
+-    public static void main(String[] args) {
+-
+-        TimeStampInfo timeStampInfo = TimeStamp.getTimeStampInfo();
+-        System.out.println(timeStampInfo.getTime());
+-
+     }
+ 
+     private static void printf(String name, byte[] data) {
+Index: src/main/java/com/xidian/bankdemo/serurity/XCiphersm.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/xidian/bankdemo/serurity/XCiphersm.java b/src/main/java/com/xidian/bankdemo/security/XCiphersm.java
+rename from src/main/java/com/xidian/bankdemo/serurity/XCiphersm.java
+rename to src/main/java/com/xidian/bankdemo/security/XCiphersm.java
+--- a/src/main/java/com/xidian/bankdemo/serurity/XCiphersm.java	
++++ b/src/main/java/com/xidian/bankdemo/security/XCiphersm.java	
+@@ -1,17 +1,13 @@
+-package com.xidian.bankdemo.serurity;
++package com.xidian.bankdemo.security;
+ 
+ import net.olymtech.javakgc.base.sm9.engine.XCipherConstant;
+ import net.olymtech.javakgc.base.sm9.engine.XCipherEngine;
+-import net.olymtech.javakgc.base.sm9.engine.XCipherResponse;
+ import net.olymtech.javakgc.base.sm9.engine.XCipherSession;
+ import net.olymtech.javakgc.base.utils.Base64;
+ import net.olymtech.javakgc.base.utils.CryptUtils;
+ import net.olymtech.javakgc.base.utils.exception.CryptoException;
+-import org.springframework.beans.factory.annotation.Value;
+-import org.springframework.stereotype.Component;
+ 
+ import java.io.UnsupportedEncodingException;
+-import java.util.Arrays;
+ 
+ public class XCiphersm {
+     //private static final String ip = "60.205.94.181";

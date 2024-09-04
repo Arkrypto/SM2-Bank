@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xidian.bankdemo.mapper.TransactionMapper">
+    <sql id="transactionInfo">from_account,to_account,from_user,to_user,amount,description,status,gmt_create,signature,server_signature,timeStamp</sql>
+
+    <sql id="query_if">
+        <if test="query.minAmount != null">
+            and amount &gt;= #{query.minAmount}
+        </if>
+        <if test="query.maxAmount != null">
+            and amount &lt;= #{query.maxAmount}
+        </if>
+        <if test="query.startDate != null">
+            and gmt_create &gt;= #{query.startDate}
+        </if>
+        <if test="query.endDate != null">
+            and gmt_create &lt;= #{query.endDate}
+        </if>
+    </sql>
+
+
+    <select id="findByQuery" resultType="Transaction">
+        select <include refid="transactionInfo"/> from transaction
+        <where>
+            <if test="query.objAccount != null">
+                and (from_account = #{query.objAccount} or to_account = #{query.objAccount})
+            </if>
+            <include refid="query_if"/>
+        </where>
+    </select>
+    <!--###############################################################-->
+    <resultMap id="income" type="com.xidian.bankdemo.dto.StatementDTO">
+        <result column="to_account" property="myAccount"/>
+        <result column="from_account" property="tradeAccount"/>
+        <result column="from_user" property="tradeUser"/>
+        <result column="gmt_create" property="tradeTime"/>
+        <result column="type" property="tradeType"/>
+        <result column="amount" property="amount"/>
+        <result column="description" property="description"/>
+        <result column="status" property="status"/>
+        <result column="signature" property="signature"/>
+        <result column="server_signature" property="server_signature"/>
+        <result column="timeStamp" property="timeStamp"/>
+    </resultMap>
+    <resultMap id="outcome" type="com.xidian.bankdemo.dto.StatementDTO">
+        <result column="from_account" property="myAccount"/>
+        <result column="to_account" property="tradeAccount"/>
+        <result column="to_user" property="tradeUser"/>
+        <result column="gmt_create" property="tradeTime"/>
+        <result column="type" property="tradeType"/>
+        <result column="amount" property="amount"/>
+        <result column="description" property="description"/>
+        <result column="status" property="status"/>
+        <result column="signature" property="signature"/>
+        <result column="server_signature" property="server_signature"/>
+        <result column="timeStamp" property="timeStamp"/>
+    </resultMap>
+    <select id="findIncomeByQuery" resultMap="income">
+        select <include refid="transactionInfo"/>,"转入" as type from transaction
+        <where>
+            and to_account = #{query.myAccount}
+            <if test="query.objAccount != null">
+                and from_account = #{query.objAccount}
+            </if>
+            <include refid="query_if"/>
+        </where>
+    </select>
+    <select id="findOutcomeByQuery" resultMap="outcome">
+        select <include refid="transactionInfo"/>,"转出" as type from transaction
+        <where>
+            and from_account = #{query.myAccount}
+            <if test="query.objAccount != null">
+                and to_account = #{query.objAccount}
+            </if>
+            <include refid="query_if"/>
+        </where>
+    </select>
+
+
+    <insert id="insertTransaction" parameterType="Transaction">
+        insert into transaction(from_account, to_account, from_user, to_user, amount, description, status,gmt_Create,gmt_Modified,signature,server_signature,timeStamp)
+        values (#{fromAccount}, #{toAccount}, #{fromUser}, #{toUser}, #{amount}, #{description}, #{status},#{gmtCreate},#{gmtModified},#{signature},#{server_signature},#{timeStamp})
+    </insert>
+
+</mapper>
