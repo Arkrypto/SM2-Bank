@@ -517,17 +517,16 @@ export default {
             let iniData = this.encodeBase64(this.transactionForm.iniData);
             let ukey_val = this.keyindex;
             let identity_val = this.container;
-            // Session 里不存了，采用方案三
             // 如果websocket没有获取到，就从session里取
-            // if(ukey_val == ""){
-            //   ukey_val = localStorage.getItem("keyindex");
-            // }
-            // if(identity_val == ""){
-            //   identity_val = localStorage.getItem("container");
-            // }
+            if(ukey_val == ""){
+              ukey_val = localStorage.getItem("keyindex");
+            }
+            if(identity_val == ""){
+              identity_val = localStorage.getItem("container");
+            }
+            let pass = localStorage.getItem("pin");
             let hashtype = "";
             let format = "asn.1";
-            let pass = localStorage.getItem("pin");
             console.log(iniData);
             ntlsUtil.func.data_sm2_signature(ukey_val, identity_val, pass, iniData, hashtype, format, this.doTrans);
           }
