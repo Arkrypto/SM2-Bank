@@ -418,10 +418,10 @@ export default {
       this.loginForm.signature = message.data;
       
       this.$store.dispatch('user/login', this.loginForm).then(() => {
-        // this.redirect = 
-        localStorage.setItem("pin", this.loginForm.key);
-        localStorage.setItem("keyindex", this.keyindex);
-        localStorage.setItem("container", this.container);
+        // localStorage.setItem("pin", this.loginForm.key);
+        // localStorage.setItem("keyindex", this.keyindex);
+        // localStorage.setItem("container", this.container);
+        ntlsUtil.close();
         this.$router.push({ path: this.redirect || '/' })
         
         this.loading = false
