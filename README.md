@@ -6,3 +6,5 @@
 
 前端采用 Vue 模板 [PanJiaChen/vue-admin-template: a vue2.0 minimal admin template (github.com)](https://github.com/PanJiaChen/vue-admin-template)，对登录、转账过程的 SM2 加密进行改写
 
+- WebSocket 对 UKey 的读取有点问题，这里前端采用的异步回调函数非常不熟悉
+
